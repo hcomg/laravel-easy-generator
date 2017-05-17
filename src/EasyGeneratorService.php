@@ -78,6 +78,10 @@ class EasyGeneratorService
         $fileGenerator->templateName = 'transformer';
         $fileGenerator->path = app_path().'/Transformers/'.$this->modelName.'Transformer.php';
         $fileGenerator->Generate();
+
+        $addRoute = '$api->resource(\'' . $this->routePath . '\', \'' . $this->controllerName . ' Controller\');';
+        $this->appendToEndOfFile(base_path().'/routes/api.php', "\n".$addRoute, 0, true);
+        $this->output->info('Adding Route: '.$addRoute);
     }
 
     protected function appendToEndOfFile($path, $text, $remove_last_chars = 0, $dont_add_if_exist = false) {
