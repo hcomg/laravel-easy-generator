@@ -1,0 +1,15 @@
+{
+  "name": "hcomg/laravel-easy-generator",
+  "description": "php artisan command to generate fully working crud with api resource by having database tables",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "HCOMG",
+      "email": "hcomg.corp@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "laravel/framework": ">=5.0.0"
+  }
+}
