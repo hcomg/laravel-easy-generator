@@ -2,10 +2,9 @@
 
 namespace EasyGenerator;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
-class EasyGeneratorService
+class EasyGeneratorCommand
 {
 
     public $modelName = '';
