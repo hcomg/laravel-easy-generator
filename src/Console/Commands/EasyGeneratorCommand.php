@@ -4,7 +4,7 @@ namespace EasyGenerator\Console\Commands;
 
 use EasyGenerator\EasyGeneratorService;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Container\Container;
+use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Config;
 
 class EasyGeneratorCommand extends Command
@@ -14,7 +14,7 @@ class EasyGeneratorCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'make:api {model-name} {--force} {--singular} {--table-name=} {--custom-controller=}';
+    protected $signature = 'make:api {--model=} {--force} {--singular} {--table=} {--controller=}';
     /**
      * The console command description.
      *
@@ -37,10 +37,10 @@ class EasyGeneratorCommand extends Command
      */
     public function handle()
     {
-        $modelName = strtolower($this->argument('model-name'));
+        $modelName = strtolower($this->option('model'));
         $prefix = Config::get('database.connections.mysql.prefix');
-        $custom_table_name = $this->option('table-name');
-        $custom_controller = $this->option('custom-controller');
+        $custom_table_name = $this->option('table');
+        $custom_controller = $this->option('controller');
         $singular = $this->option('singular');
         $toCreate = [];
         if($modelName == 'all') {
