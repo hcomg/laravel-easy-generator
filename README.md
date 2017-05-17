@@ -12,6 +12,6 @@ composer require hcomg/laravel-easy-generator
 
 Add to config/app.php the following line to the 'providers' array:
 
-```bash
+```php
 EasyGenerator\EasyGeneratorServiceProvider::class,
 ```
