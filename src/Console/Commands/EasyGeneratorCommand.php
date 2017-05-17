@@ -1,6 +1,6 @@
 <?php
 
-namespace EasyGenerator;
+namespace EasyGenerator\Console\Commands;
 
 use Illuminate\Support\Facades\DB;
 
