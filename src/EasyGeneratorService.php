@@ -75,8 +75,8 @@ class EasyGeneratorService
         $fileGenerator->path = app_path().'/Models/'.$this->modelName.'.php';
         $fileGenerator->Generate();
 
-        $fileGenerator->templateName = 'transformers';
-        $fileGenerator->path = app_path().'/Transformers/'.$this->modelName.'Transformers.php';
+        $fileGenerator->templateName = 'transformer';
+        $fileGenerator->path = app_path().'/Transformers/'.$this->modelName.'Transformer.php';
         $fileGenerator->Generate();
     }
 
