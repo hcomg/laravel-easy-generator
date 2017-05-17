@@ -50,6 +50,10 @@ class EasyGeneratorService
                 $this->output->info('Controller already exists, use --force to overwrite');
                 return;
             }
+            if (file_exists(app_path() . '/Transformers/' . $this->modelName . 'Transformer.php')) {
+                $this->output->info('Transformers already exists, use --force to overwrite');
+                return;
+            }
         }
 
         $columns = $this->getColumns($this->prefix . ($this->tableName ?: strtolower(str_plural($modelName))));
@@ -79,7 +83,7 @@ class EasyGeneratorService
         $fileGenerator->path = app_path().'/Transformers/'.$this->modelName.'Transformer.php';
         $fileGenerator->Generate();
 
-        $addRoute = '$api->resource(\'' . $this->routePath . '\', \'' . $this->controllerName . ' Controller\');';
+        $addRoute = '$api->resource(\'' . $this->routePath . '\', \'\App\Http\Controllers\\' . $this->controllerName . 'Controller\');';
         $this->appendToEndOfFile(base_path().'/routes/api.php', "\n".$addRoute, 0, true);
         $this->output->info('Adding Route: '.$addRoute);
     }
