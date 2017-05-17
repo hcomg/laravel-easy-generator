@@ -2,6 +2,8 @@
 
 namespace EasyGenerator;
 
+use Illuminate\Support\Facades\DB;
+
 class EasyGeneratorService
 {
 
@@ -73,8 +75,8 @@ class EasyGeneratorService
         $fileGenerator->path = app_path().'/Models/'.$this->modelName.'.php';
         $fileGenerator->Generate();
 
-        $fileGenerator->templateName = 'model';
-        $fileGenerator->path = app_path().'/Models/'.$this->modelName.'.php';
+        $fileGenerator->templateName = 'transformers';
+        $fileGenerator->path = app_path().'/Transformers/'.$this->modelName.'Transformers.php';
         $fileGenerator->Generate();
     }
 
