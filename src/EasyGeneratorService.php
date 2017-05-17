@@ -24,7 +24,7 @@ class EasyGeneratorService
     public function Generate()
     {
         $modelName = ucfirst(str_singular($this->modelName));
-        $this->routePath = strtolower($this->controllerName);
+        $this->routePath = strtolower(str_plural($this->controllerName));
         $this->output->info('');
         $this->output->info('Creating catalogue for table: ' . ($this->tableName ? : strtolower(str_plural($this->modelName))));
         $this->output->info('Model Name: ' . $modelName);
