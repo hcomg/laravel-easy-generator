@@ -10,7 +10,11 @@
   ],
   "require": {
     "php": ">=5.5.9",
-    "laravel/framework": ">=5.0.0"
+    "laravel/framework": ">=5.0.0",
+    "dingo/api": "1.0.x@dev"
+  },
+  "suggest": {
+    "dingo/api": "A RESTful API package for the Laravel frameworks."
   },
   "autoload": {
     "psr-4": {
