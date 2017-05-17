@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Config;
 
-class CrudGeneratorCommand extends Command
+class EasyGeneratorCommand extends Command
 {
     /**
      * The name and signature of the console command.
