@@ -2,9 +2,10 @@
 
 namespace EasyGenerator\Console\Commands;
 
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class EasyGeneratorCommand
+class EasyGeneratorCommand extends Command
 {
 
     public $modelName = '';
