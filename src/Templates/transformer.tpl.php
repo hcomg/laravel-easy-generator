@@ -6,7 +6,7 @@ namespace [[appns]]Transformers;
 use [[appns]]Models\[[model_uc]];
 use League\Fractal\TransformerAbstract;
 
-class [[model_uc]]Transformer extends TransformerAbstract
+class [[controller_name]]Transformer extends TransformerAbstract
 {
     public function transform([[model_uc]] $[[model_singular]]) {
         return [

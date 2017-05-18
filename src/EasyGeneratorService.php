@@ -71,17 +71,21 @@ class EasyGeneratorService
         $fileGenerator->options = $options;
         $fileGenerator->output = $this->output;
 
-        $fileGenerator->templateName = 'controller';
-        $fileGenerator->path = app_path().'/Http/Controllers/'.$this->controllerName.'Controller.php';
-        $fileGenerator->Generate();
+        if ($this->modelName && strlen($this->modelName) > 0) {
+            $fileGenerator->templateName = 'model';
+            $fileGenerator->path = app_path().'/Models/'.$this->modelName.'.php';
+            $fileGenerator->Generate();
+        }
 
-        $fileGenerator->templateName = 'model';
-        $fileGenerator->path = app_path().'/Models/'.$this->modelName.'.php';
-        $fileGenerator->Generate();
+        if ($this->controllerName && strlen($this->controllerName) > 0) {
+            $fileGenerator->templateName = 'controller';
+            $fileGenerator->path = app_path() . '/Http/Controllers/' . $this->controllerName . 'Controller.php';
+            $fileGenerator->Generate();
 
-        $fileGenerator->templateName = 'transformer';
-        $fileGenerator->path = app_path().'/Transformers/'.$this->modelName.'Transformer.php';
-        $fileGenerator->Generate();
+            $fileGenerator->templateName = 'transformer';
+            $fileGenerator->path = app_path().'/Transformers/'.$this->controllerName.'Transformer.php';
+            $fileGenerator->Generate();
+        }
 
         $addRoute = '$api->resource(\'' . $this->routePath . '\', \'\App\Http\Controllers\\' . $this->controllerName . 'Controller\');';
         $this->appendToEndOfFile(base_path().'/routes/api.php', "\n".$addRoute, 0, true);

@@ -3,7 +3,7 @@
 namespace [[appns]]Http\Controllers;
 
 use [[appns]]Models\[[model_uc]];
-use [[appns]]Transformers\[[model_uc]]Transformer;
+use [[appns]]Transformers\[[controller_name]]Transformer;
 use Dingo\Api\Routing\Helpers;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -21,7 +21,7 @@ class [[controller_name]]Controller extends Controller
     public function index()
     {
         $[[model_plural]] = [[model_uc]]::orderBy('id', 'desc')->paginate(10);
-        return $this->response->paginator($[[model_plural]], new [[model_uc]]Transformer());
+        return $this->response->paginator($[[model_plural]], new [[controller_name]]Transformer());
     }
 
     /**
@@ -47,7 +47,7 @@ class [[controller_name]]Controller extends Controller
                 'message' => $exception->getMessage()
             ], 500);
         }
-        return $this->response->item($[[model_singular]], new [[model_uc]]Transformer());
+        return $this->response->item($[[model_singular]], new [[controller_name]]Transformer());
     }
 
     /**
@@ -59,7 +59,7 @@ class [[controller_name]]Controller extends Controller
     public function show($id)
     {
         $[[model_singular]] = [[model_uc]]::findOrFail($id);
-        return $this->response->item($[[model_singular]], new [[model_uc]]Transformer());
+        return $this->response->item($[[model_singular]], new [[controller_name]]Transformer());
     }
 
     /**
@@ -89,7 +89,7 @@ class [[controller_name]]Controller extends Controller
                 'message' => $exception->getMessage()
             ], 500);
         }
-        return $this->response->item($[[model_singular]], new [[model_uc]]Transformer());
+        return $this->response->item($[[model_singular]], new [[controller_name]]Transformer());
     }
 
     /**
