@@ -38,7 +38,7 @@ class EasyGeneratorService
             'prefix' => $this->prefix,
             'controller_name' => $this->controllerName,
             'route_path' => $this->routePath,
-            'appns' => $this->appNamespace,
+            'appns' => $this->appNamespace
         ];
 
         if(!$this->force) {
@@ -57,6 +57,25 @@ class EasyGeneratorService
         }
 
         $columns = $this->getColumns($this->prefix . ($this->tableName ?: strtolower(str_plural($modelName))));
+
+        $rulesMessages = [];
+        foreach ($columns as $column) {
+            $rules = explode('|', $column['rules_create']);
+            foreach ($rules as $rule) {
+                if (str_contains($rule, ':')) {
+                    $rule = explode(':', $rule);
+                    $rule = $rule[0];
+                }
+                if (strlen($rule)) {
+                    $rulesMessage = [
+                        'key' => $column['name'] . '.' . $rule,
+                        'value' => $column['name'] . '_' . $rule
+                    ];
+                    $rulesMessages[] = $rulesMessage;
+                }
+            }
+        }
+        $options['rules_messages'] = $rulesMessages;
 
         $options['columns'] = $columns;
         $options['first_column_nonId'] = count($columns) > 1 ? $columns[1]['name'] : '';
@@ -87,9 +106,9 @@ class EasyGeneratorService
             $fileGenerator->Generate();
         }
 
-        $addRoute = '$api->resource(\'' . $this->routePath . '\', \'\App\Http\Controllers\\' . $this->controllerName . 'Controller\');';
-        $this->appendToEndOfFile(base_path().'/routes/api.php', "\n".$addRoute, 0, true);
-        $this->output->info('Adding Route: '.$addRoute);
+//        $addRoute = '$api->resource(\'' . $this->routePath . '\', \'\App\Http\Controllers\\' . $this->controllerName . 'Controller\');';
+//        $this->appendToEndOfFile(base_path().'/routes/api.php', "\n".$addRoute, 0, true);
+//        $this->output->info('Adding Route: '.$addRoute);
     }
 
     protected function appendToEndOfFile($path, $text, $remove_last_chars = 0, $dont_add_if_exist = false) {
@@ -103,40 +122,156 @@ class EasyGeneratorService
     protected function getColumns($tableName) {
         $dbType = DB::getDriverName();
         switch ($dbType) {
-            case "pgsql":
-                $cols = DB::select("select column_name as Field, "
-                    . "data_type as Type, "
-                    . "is_nullable as Null "
-                    . "from INFORMATION_SCHEMA.COLUMNS "
-                    . "where table_name = '" . $tableName . "'");
+            case "mysql":
+                $cols = DB::select("SELECT cols.TABLE_NAME, cols.COLUMN_NAME, cols.ORDINAL_POSITION,
+                    cols.COLUMN_DEFAULT, cols.IS_NULLABLE, cols.DATA_TYPE,
+                        cols.CHARACTER_MAXIMUM_LENGTH, cols.CHARACTER_OCTET_LENGTH,
+                        cols.NUMERIC_PRECISION, cols.NUMERIC_SCALE,
+                        cols.COLUMN_TYPE, cols.COLUMN_KEY, cols.EXTRA,
+                        cols.COLUMN_COMMENT, refs.REFERENCED_TABLE_NAME, refs.REFERENCED_COLUMN_NAME,
+                        cRefs.UPDATE_RULE, cRefs.DELETE_RULE,
+                        links.TABLE_NAME AS LINKS_TABLE, links.COLUMN_NAME AS LINKS_COLUMN,
+                        cLinks.UPDATE_RULE, cLinks.DELETE_RULE
+                    FROM INFORMATION_SCHEMA.`COLUMNS` as cols
+                    LEFT JOIN INFORMATION_SCHEMA.`KEY_COLUMN_USAGE` AS refs
+                    ON refs.TABLE_SCHEMA=cols.TABLE_SCHEMA
+                        AND refs.REFERENCED_TABLE_SCHEMA=cols.TABLE_SCHEMA
+                        AND refs.TABLE_NAME=cols.TABLE_NAME
+                        AND refs.COLUMN_NAME=cols.COLUMN_NAME
+                    LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS cRefs
+                    ON cRefs.CONSTRAINT_SCHEMA=cols.TABLE_SCHEMA
+                        AND cRefs.CONSTRAINT_NAME=refs.CONSTRAINT_NAME
+                    LEFT JOIN INFORMATION_SCHEMA.`KEY_COLUMN_USAGE` AS links
+                    ON links.TABLE_SCHEMA=cols.TABLE_SCHEMA
+                        AND links.REFERENCED_TABLE_SCHEMA=cols.TABLE_SCHEMA
+                        AND links.REFERENCED_TABLE_NAME=cols.TABLE_NAME
+                        AND links.REFERENCED_COLUMN_NAME=cols.COLUMN_NAME
+                    LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS cLinks
+                    ON cLinks.CONSTRAINT_SCHEMA=cols.TABLE_SCHEMA
+                        AND cLinks.CONSTRAINT_NAME=links.CONSTRAINT_NAME
+                    WHERE cols.TABLE_SCHEMA=DATABASE()
+                        AND cols.TABLE_NAME='{$tableName}'
+                    GROUP BY cols.COLUMN_NAME
+                    ORDER BY cols.COLUMN_NAME");
                 break;
             default:
-                $cols = DB::select("show columns from " . $tableName);
+                $cols = [];
                 break;
         }
+//        return dd($cols);
         $ret = [];
         foreach ($cols as $c) {
-            $field = isset($c->Field) ? $c->Field : $c->field;
-            $type = isset($c->Type) ? $c->Type : $c->type;
             $cAdd = [];
-            $cAdd['name'] = $field;
-            $cAdd['type'] = $field == 'id' ? 'id' : $this->getTypeFromDBType($type);
-            $cAdd['display'] = ucwords(str_replace('_', ' ', $field));
+            $cAdd['name'] = $c->COLUMN_NAME;
+            $cAdd['doc_type'] = $this->getDocTypeFromDBType($c->DATA_TYPE);
+            $cAdd['rules_create'] = $this->getRolesFromDB($c);
+            $cAdd['rules_update'] = $this->getRolesFromDB($c, 'update');
             $ret[] = $cAdd;
         }
         return $ret;
     }
 
-    protected function getTypeFromDBType($dbType) {
-        if (str_contains($dbType, 'varchar')) {
-            return 'text';
+    protected function getDocTypeFromDBType($dbType) {
+        if (
+            str_contains($dbType, 'string') ||
+            str_contains($dbType, 'varchar') ||
+            str_contains($dbType, 'text')
+        ) {
+            $type = 'string';
+        } elseif (
+            str_contains($dbType, 'date') ||
+            str_contains($dbType, 'time') ||
+            str_contains($dbType, 'datetimetz') ||
+            str_contains($dbType, 'datetime') ||
+            str_contains($dbType, 'timestamp')
+        ) {
+            $type = '\Carbon\Carbon';
+        } elseif (
+            str_contains($dbType, 'guid') ||
+            str_contains($dbType, 'integer') ||
+            str_contains($dbType, 'bigint') ||
+            str_contains($dbType, 'smallint') ||
+            str_contains($dbType, 'tinyint') ||
+            str_contains($dbType, 'int')
+        ) {
+            $type = 'int';
+        } elseif (
+            str_contains($dbType, 'decimal') ||
+            str_contains($dbType, 'float')
+        ) {
+            $type = 'float';
+        } elseif (
+        str_contains($dbType, 'boolean')
+        ) {
+            $type = 'boolean';
+        } else {
+            $type = 'mixed';
         }
-        if (str_contains($dbType, 'int') || str_contains($dbType, 'float')) {
-            return 'number';
+        return $type;
+    }
+
+    protected function getRuleTypeFromDBType($dbType) {
+        if (
+            str_contains($dbType, 'string') ||
+            str_contains($dbType, 'varchar') ||
+            str_contains($dbType, 'text')
+        ) {
+            $type = 'string';
+        } elseif (
+            str_contains($dbType, 'date') ||
+            str_contains($dbType, 'time') ||
+            str_contains($dbType, 'datetimetz') ||
+            str_contains($dbType, 'datetime') ||
+            str_contains($dbType, 'timestamp')
+        ) {
+            $type = 'date';
+        } elseif (
+            str_contains($dbType, 'guid') ||
+            str_contains($dbType, 'integer') ||
+            str_contains($dbType, 'bigint') ||
+            str_contains($dbType, 'smallint') ||
+            str_contains($dbType, 'tinyint') ||
+            str_contains($dbType, 'int')
+        ) {
+            $type = 'integer';
+        } elseif (
+            str_contains($dbType, 'decimal') ||
+            str_contains($dbType, 'float')
+        ) {
+            $type = 'float';
+        } elseif (
+        str_contains($dbType, 'boolean')
+        ) {
+            $type = 'boolean';
+        } else {
+            $type = '';
         }
-        if (str_contains($dbType, 'date')) {
-            return 'date';
+        return $type;
+    }
+
+    protected function getRolesFromDB($column, $method = 'create') {
+        $rules = '';
+        if ($column->COLUMN_KEY === 'PRI') {
+            return $rules;
         }
-        return 'unknown';
+        if ($column->IS_NULLABLE === 'NO' && is_null($column->COLUMN_DEFAULT)) {
+            $rules .= 'required';
+        }
+        $rules .= '|' . $this->getRuleTypeFromDBType($column->COLUMN_TYPE);
+        if ($column->CHARACTER_MAXIMUM_LENGTH) {
+            $rules .= '|max:' . $column->CHARACTER_MAXIMUM_LENGTH;
+        }
+        if ($column->COLUMN_KEY === 'UNI') {
+            if ($method === 'create') {
+                $rules .= '|unique:' . $column->TABLE_NAME;
+            } else {
+                $rules .= '|unique:' . $column->TABLE_NAME . ',{$id}';
+            }
+        }
+        if ($column->COLUMN_KEY === 'MUL') {
+            $rules .= '|exists:' . $column->REFERENCED_TABLE_NAME . ',' . $column->REFERENCED_COLUMN_NAME;
+        }
+        $rules = trim($rules, '|');
+        return $rules;
     }
 }
