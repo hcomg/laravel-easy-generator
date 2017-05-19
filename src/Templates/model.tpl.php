@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\Validator;
 /**
  * [[appns]]Models\Tag
  *
- * @property int $id
- * @property string $title
- * @method static \Illuminate\Database\Query\Builder|\[[appns]]Models\Tag whereId($value)
- * @method static \Illuminate\Database\Query\Builder|\[[appns]]Models\Tag whereTitle($value)
+[[foreach:columns]]
+ * @property [[i.doc_type]] $[[i.name]]
+
+[[endforeach]]
  * @mixin \Eloquent
  */
 class [[model_uc]] extends Model
 {
     public $timestamps = false;
-    protected $fillable = ['title'];
+    protected $fillable = [[[foreach:columns]]'[[i.name]]', [[endforeach]]];
 
     public function rules($method, $id = false) {
         switch($method) {
@@ -28,14 +28,16 @@ class [[model_uc]] extends Model
                 break;
             case 'POST':
                 return [
-                    'title' => 'required|unique:tags'
-                ];
+                [[foreach:columns]]
+    '[[i.name]]' => '[[i.rules_create]]',
+                [[endforeach]]];
                 break;
             case 'PUT':
             case 'PATCH':
                 return [
-                    'title' => 'required|unique:' . $this->getTable() . ',title,' . $id
-                ];
+                [[foreach:columns]]
+    '[[i.name]]' => "[[i.rules_update]]",
+                [[endforeach]]];
                 break;
             default:
                 break;
@@ -44,9 +46,9 @@ class [[model_uc]] extends Model
 
     public function messages() {
         return [
-            'title.required' => '',
-            'title.unique' => ''
-        ];
+        [[foreach:rules_messages]]
+    '[[i.key]]' => '[[i.value]]',
+        [[endforeach]]];
     }
 
     /**
