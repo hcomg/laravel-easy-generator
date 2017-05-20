@@ -14,7 +14,11 @@ class EasyGeneratorCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'make:api {--model=} {--force} {--singular} {--table=} {--controller=}';
+    protected $signature = 'hcomg:gen
+                            {--model= : The name of the model.}
+                            {--table= : The name of the table.}
+                            {--controller= : The name of the controller.}
+                            {--force : Override exist files}';
     /**
      * The console command description.
      *
@@ -39,9 +43,8 @@ class EasyGeneratorCommand extends Command
     {
         $modelName = strtolower($this->option('model'));
         $prefix = Config::get('database.connections.mysql.prefix');
-        $custom_table_name = $this->option('table');
-        $custom_controller = $this->option('controller');
-        $singular = $this->option('singular');
+        $table_name = $this->option('table');
+        $controller = $this->option('controller');
         $toCreate = [];
         if($modelName == 'all') {
             $preTables = json_decode(json_encode(DB::select("show tables")), true);
@@ -64,21 +67,15 @@ class EasyGeneratorCommand extends Command
                 }
             }
             // Remove options not applicable for multiples tables
-            $custom_table_name = null;
-            $custom_controller = null;
+            $table_name = null;
+            $controller = null;
             $singular = null;
         }
         else {
             $toCreate = [
                 'modelName' => $modelName,
-                'tableName' => '',
+                'tableName' => $table_name,
             ];
-            if($singular) {
-                $toCreate['tableName'] = strtolower($modelName);
-            }
-            else if($custom_table_name) {
-                $toCreate['tableName'] = $custom_table_name;
-            }
             $toCreate = [$toCreate];
         }
         foreach ($toCreate as $c) {
@@ -89,7 +86,7 @@ class EasyGeneratorCommand extends Command
             $generator->tableName = $c['tableName'];
             $generator->prefix = $prefix;
             $generator->force = $this->option('force');
-            $generator->controllerName = ucfirst(strtolower($custom_controller)) ?: str_plural($generator->modelName);
+            $generator->controllerName = ucfirst(strtolower($controller)) ?: str_singular($generator->modelName);
             $generator->Generate();
         }
     }
