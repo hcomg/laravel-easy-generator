@@ -31,7 +31,7 @@ Open your terminal(CLI), go to the root directory of your Laravel project, then 
     public function register()
     {
         if ($this->app->environment() !== 'production') {
-            $this->app->register('EasyGenerator\EasyGeneratorServiceProvider::class');
+            $this->app->register(\EasyGenerator\EasyGeneratorServiceProvider::class);
         }
     }
     ```
