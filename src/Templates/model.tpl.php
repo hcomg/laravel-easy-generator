@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * [[appns]]Models\Tag
+ * [[appns]]Models\[[model_uc]]
  *
 [[foreach:columns]]
  * @property [[i.doc_type]] $[[i.name]]
