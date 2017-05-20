@@ -104,19 +104,42 @@ class EasyGeneratorService
             $fileGenerator->templateName = 'transformer';
             $fileGenerator->path = app_path().'/Transformers/'.$this->controllerName.'Transformer.php';
             $fileGenerator->Generate();
-        }
 
-//        $addRoute = '$api->resource(\'' . $this->routePath . '\', \'\App\Http\Controllers\\' . $this->controllerName . 'Controller\');';
-//        $this->appendToEndOfFile(base_path().'/routes/api.php', "\n".$addRoute, 0, true);
-//        $this->output->info('Adding Route: '.$addRoute);
+            $addRoute = '    $api->resource(\'' . $this->routePath . '\', \'\App\Http\Controllers\\' . $this->controllerName . 'Controller\');';
+            $this->appendToAfterVersion(base_path().'/routes/api.php', $addRoute);
+            $this->output->info('Adding Route: '.$addRoute);
+        }
     }
 
-    protected function appendToEndOfFile($path, $text, $remove_last_chars = 0, $dont_add_if_exist = false) {
+    protected function appendToAfterVersion($path, $text) {
         $content = file_get_contents($path);
-        if(!str_contains($content, $text) || !$dont_add_if_exist) {
-            $newContent = substr($content, 0, strlen($content) - $remove_last_chars) . $text;
-            file_put_contents($path, $newContent);
+        if(!str_contains($content, trim($text, "\",\n, "))) {
+            $content = explode("\n", $content);
+            $apiDefined = false;
+            $hasPhpOpenTag = false;
+            foreach ($content as $index => $item) {
+                if (str_contains($item, '->version(')) {
+                    $apiDefined = true;
+                    array_splice($content, $index + 1, 0, $text);
+                }
+                if (str_contains($index, '<?php')) {
+                    $hasPhpOpenTag = true;
+                }
+            }
+            if (!$apiDefined) {
+                if (!$hasPhpOpenTag) {
+                    $content[] = "<?php\n";
+                }
+                $content[] = '$api = app(\'Dingo\Api\Routing\Router\');';
+                $content[] = '$api->version(\'v1\', function ($api) {';
+                $content[] = $text;
+                $content[] = '});';
+            }
+            $content = implode($content, "\n");
+            $content = trim($content, " ,\n");
+            file_put_contents($path, $content);
         }
+        return $content;
     }
 
     protected function getColumns($tableName) {
