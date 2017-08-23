@@ -6,15 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-/**
- * [[appns]]Models\[[model_uc]]
- *
-[[foreach:columns]]
- * @property [[i.doc_type]] $[[i.name]]
-
-[[endforeach]]
- * @mixin \Eloquent
- */
 class [[model_uc]] extends Model
 {
     public $timestamps = false;
