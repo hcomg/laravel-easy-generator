@@ -72,7 +72,7 @@ class [[controller_name]]Controller extends Controller
     public function update(Request $request, $id)
     {
         /**
-         * @var Tag $[[model_singular]]
+         * @var [[model_uc]] $[[model_singular]]
          */
         $[[model_singular]] = [[model_uc]]::findOrFail($id);
 
